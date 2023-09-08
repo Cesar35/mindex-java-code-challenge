@@ -1,6 +1,7 @@
 package com.mindex.challenge.service.impl;
 
 import com.mindex.challenge.data.Employee;
+import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,6 +16,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -24,6 +28,8 @@ public class EmployeeServiceImplTest {
 
     private String employeeUrl;
     private String employeeIdUrl;
+
+    private String reportingStructureUrl;
 
     @Autowired
     private EmployeeService employeeService;
@@ -38,6 +44,7 @@ public class EmployeeServiceImplTest {
     public void setup() {
         employeeUrl = "http://localhost:" + port + "/employee";
         employeeIdUrl = "http://localhost:" + port + "/employee/{id}";
+        reportingStructureUrl = "http://localhost:" + port + "/reportStructure/{id}";
     }
 
     @Test
@@ -82,5 +89,38 @@ public class EmployeeServiceImplTest {
         assertEquals(expected.getLastName(), actual.getLastName());
         assertEquals(expected.getDepartment(), actual.getDepartment());
         assertEquals(expected.getPosition(), actual.getPosition());
+    }
+
+    @Test
+    public void testNumberOfReports() {
+        Employee manager = createEmployeeTree();
+
+        ReportingStructure reportingStructure = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, manager.getEmployeeId()).getBody();
+
+        assertNotNull(reportingStructure);
+        assertNotNull(reportingStructure.getEmployee());
+        assertEquals(reportingStructure.getEmployee().getEmployeeId(), manager.getEmployeeId());
+        assertEquals(reportingStructure.getNumberOfReports(), 4);
+
+    }
+
+    private Employee createEmployeeTree() {
+
+        Employee manager = new Employee();
+        manager.setFirstName("John");
+        manager.setLastName("Lennon");
+
+        List<Employee> directReports = new ArrayList<>();
+
+        for(int i = 0; i<4; i++) {
+            Employee report = new Employee();
+            report.setFirstName("John"+i);
+            report.setLastName("Doe"+i);
+            Employee createdEmployee = restTemplate.postForEntity(employeeUrl, report, Employee.class).getBody();
+            directReports.add(createdEmployee);
+        }
+
+        manager.setDirectReports(directReports);
+        return restTemplate.postForEntity(employeeUrl, manager, Employee.class).getBody();
     }
 }

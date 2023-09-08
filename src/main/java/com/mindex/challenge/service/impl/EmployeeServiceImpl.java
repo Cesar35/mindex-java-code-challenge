@@ -2,6 +2,7 @@ package com.mindex.challenge.service.impl;
 
 import com.mindex.challenge.dao.EmployeeRepository;
 import com.mindex.challenge.data.Employee;
+import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,5 +46,31 @@ public class EmployeeServiceImpl implements EmployeeService {
         LOG.debug("Updating employee [{}]", employee);
 
         return employeeRepository.save(employee);
+    }
+
+    @Override
+    public ReportingStructure fetchReports(String id) {
+        LOG.debug("Fetching reports for employee with id [{}]", id);
+
+        Employee employee = employeeRepository.findByEmployeeId(id);
+
+        if (employee == null) {
+            throw new RuntimeException("Invalid employeeId: " + id);
+        }
+
+        int numberOfReports = countInnerReports(employee);
+
+        return new ReportingStructure(employee, numberOfReports);
+    }
+
+    private int countInnerReports(Employee employee) {
+        int totals = 0;
+        if(employee.getDirectReports() != null ) {
+            totals += employee.getDirectReports().size();
+            for (Employee e : employee.getDirectReports()) {
+                totals += countInnerReports(e);
+            }
+        }
+        return totals;
     }
 }
