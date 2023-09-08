@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -91,8 +92,9 @@ public class EmployeeServiceImplTest {
         assertEquals(expected.getPosition(), actual.getPosition());
     }
 
+    // Test where all employees are on same level
     @Test
-    public void testNumberOfReports() {
+    public void testNumberOfReportsOnSameLevel() {
         Employee manager = createEmployeeTree();
 
         ReportingStructure reportingStructure = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, manager.getEmployeeId()).getBody();
@@ -104,6 +106,7 @@ public class EmployeeServiceImplTest {
 
     }
 
+    // Helper function to create manager and reports under them
     private Employee createEmployeeTree() {
 
         Employee manager = new Employee();
@@ -118,6 +121,45 @@ public class EmployeeServiceImplTest {
             report.setLastName("Doe"+i);
             Employee createdEmployee = restTemplate.postForEntity(employeeUrl, report, Employee.class).getBody();
             directReports.add(createdEmployee);
+        }
+
+        manager.setDirectReports(directReports);
+        return restTemplate.postForEntity(employeeUrl, manager, Employee.class).getBody();
+    }
+
+    // Test where there is at least one level
+    @Test
+    public void testNumberOfReportsOnDifferentLevel() {
+        Employee manager = createEmployeeTreeSubs();
+
+        ReportingStructure reportingStructure = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, manager.getEmployeeId()).getBody();
+
+        assertNotNull(reportingStructure);
+        assertNotNull(reportingStructure.getEmployee());
+        assertEquals(reportingStructure.getEmployee().getEmployeeId(), manager.getEmployeeId());
+        assertEquals(reportingStructure.getNumberOfReports(), 4);
+
+    }
+
+    private Employee createEmployeeTreeSubs() {
+
+        Employee manager = new Employee();
+        manager.setFirstName("John");
+        manager.setLastName("Lennon");
+
+        List<Employee> directReports = new ArrayList<>();
+
+        for(int i = 0; i<2; i++) {
+            Employee report = new Employee();
+            report.setFirstName("John"+i);
+            report.setLastName("Doe"+i);
+            Employee createdEmployee = restTemplate.postForEntity(employeeUrl, report, Employee.class).getBody();
+            Employee reportManager = new Employee();
+            reportManager.setFirstName("Fred"+i);
+            reportManager.setLastName("Flin"+i);
+            reportManager.setDirectReports(Collections.singletonList(createdEmployee));
+            Employee subManager = restTemplate.postForEntity(employeeUrl, reportManager, Employee.class).getBody();
+            directReports.add(subManager);
         }
 
         manager.setDirectReports(directReports);

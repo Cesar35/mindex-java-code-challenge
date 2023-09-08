@@ -52,17 +52,21 @@ public class EmployeeServiceImpl implements EmployeeService {
     public ReportingStructure fetchReports(String id) {
         LOG.debug("Fetching reports for employee with id [{}]", id);
 
+        // Fetch current employee
         Employee employee = employeeRepository.findByEmployeeId(id);
 
         if (employee == null) {
             throw new RuntimeException("Invalid employeeId: " + id);
         }
 
+        //Call recursive helper method to go through each employees direct reports and count them
         int numberOfReports = countInnerReports(employee);
 
+        //Return new data object with employee and number of employees reporting to them
         return new ReportingStructure(employee, numberOfReports);
     }
 
+    // Recursive loop to count all nested employees
     private int countInnerReports(Employee employee) {
         int totals = 0;
         if(employee.getDirectReports() != null ) {

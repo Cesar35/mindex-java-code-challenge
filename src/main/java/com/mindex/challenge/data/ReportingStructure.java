@@ -1,5 +1,9 @@
 package com.mindex.challenge.data;
 
+/**
+ *  Data object for reporting structure of employee. Returns said employee object
+ *  and integer value representing number of reports
+ */
 public class ReportingStructure {
 
     private Employee employee;
