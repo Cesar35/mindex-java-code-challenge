@@ -72,7 +72,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         if(employee.getDirectReports() != null ) {
             totals += employee.getDirectReports().size();
             for (Employee e : employee.getDirectReports()) {
-                totals += countInnerReports(e);
+                // Add this because data in json file seems to imply we would only get id back from reports list
+                if(e.getFirstName() == null){
+                    Employee fe= employeeRepository.findByEmployeeId(e.getEmployeeId());
+                    totals += countInnerReports(fe);
+                } else {
+                    totals += countInnerReports(e);
+                }
             }
         }
         return totals;

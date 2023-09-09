@@ -95,13 +95,17 @@ public class EmployeeServiceImplTest {
     // Test where all employees are on same level
     @Test
     public void testNumberOfReportsOnSameLevel() {
-        Employee manager = createEmployeeTree();
 
-        ReportingStructure reportingStructure = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, manager.getEmployeeId()).getBody();
+        //Employee manager = createEmployeeTree();
+        String employeeId = "16a596ae-edd3-4847-99fe-c4518e82c86f";
+
+        //Employee readEmployee = restTemplate.getForEntity(employeeIdUrl, Employee.class, employeeId).getBody();
+
+        ReportingStructure reportingStructure = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, employeeId).getBody();
 
         assertNotNull(reportingStructure);
         assertNotNull(reportingStructure.getEmployee());
-        assertEquals(reportingStructure.getEmployee().getEmployeeId(), manager.getEmployeeId());
+        assertEquals(reportingStructure.getEmployee().getEmployeeId(), employeeId);
         assertEquals(reportingStructure.getNumberOfReports(), 4);
 
     }
